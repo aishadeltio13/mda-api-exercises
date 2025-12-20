@@ -38,17 +38,31 @@ Using only Postman or curl, try to answer these questions:
 
 1. **What endpoints exist?**
    - Hint: Try `/books`, `/api/books`, etc.
+  Books: 404 Error
+  /api/books: funciona
 
 2. **What HTTP methods does each endpoint support?**
+   HEAD, GET, OPTIONS, POST
 
-3. **For POST requests:**
-   - What fields are required?
-   - What format is expected?
+1. **For POST requests:**
+   - What fields are required? author, title 
+   - What format is expected? json
 
-4. **What do the responses look like?**
+2. **What do the responses look like?**
+Cuerpo (Body): Un objeto JSON que contiene una lista bajo la clave "books".
+Contenido del objeto: Cada libro (author, id, isbn, title, year).
+"books": 
+        {
+            "author": "George Orwell",
+            "id": 1,
+            "isbn": "978-0451524935",
+            "title": "1984",
+            "year": 1949
+        },
 
-5. **Are there query parameters?**
-   - Filtering? Pagination? What parameter names?
+1. **Are there query parameters?**
+Filtering: Prueba con ?author=Harper+Lee. La lista se filtra, el parámetro existe.
+Pagination: Prueba con ?page=1 o ?limit=5. La cantidad de resultados cambia
 
 ### Track Your Experience
 
@@ -85,12 +99,14 @@ You'll see Swagger UI - interactive API documentation.
 
 Explore the Swagger UI and answer these questions:
 
-1. **Endpoint Discovery** (1 minute)
-   - How many endpoints are there?
-   - What does each one do?
-   - Was this clearer than before?
+1. **Endpoint Discovery** 
+POST: /api/books
+GET: /api/books
+DELETE: /api/books/{id}
+GET: /api/books/{id} 
+PUT: /api/books/{id}
 
-2. **Interactive Testing** (5 minutes)
+1. **Interactive Testing** 
 
    Try these operations using "Try it out":
 
@@ -115,7 +131,7 @@ Explore the Swagger UI and answer these questions:
      - Delete a book
      - Try to GET it again (should be 404)
 
-3. **Understanding Schemas** (2 minutes)
+2. **Understanding Schemas** (2 minutes)
    - Scroll down to "Schemas" section
    - Expand the "Book" schema
    - See all fields and their types

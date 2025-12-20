@@ -43,6 +43,7 @@ books = {
     2: {'id': 2, 'title': 'To Kill a Mockingbird', 'author': 'Harper Lee', 'year': 1960, 'isbn': '978-0061120084'},
     3: {'id': 3, 'title': 'The Great Gatsby', 'author': 'F. Scott Fitzgerald', 'year': 1925, 'isbn': '978-0743273565'}
 }
+
 next_id = 4
 
 @ns.route('/books')
