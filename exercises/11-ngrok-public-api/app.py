@@ -2,7 +2,7 @@ from flask import Flask, request, jsonify
 
 app = Flask(__name__)
 
-# In-memory storage for demonstration
+# Almacenamiento en memoria para demostración
 users = {}
 webhook_events = []
 
@@ -10,8 +10,7 @@ webhook_events = []
 @app.route('/health', methods=['GET'])
 def health():
     """
-    Health check endpoint to verify the API is running.
-    This is useful for testing that ngrok is working correctly.
+    Endpoint de estado para verificar que la API funciona.
     """
     return jsonify({
         'status': 'ok',
@@ -24,8 +23,8 @@ def health():
 @app.route('/info', methods=['GET'])
 def info():
     """
-    Returns information about the incoming request.
-    Useful for debugging ngrok forwarding.
+    Devuelve información sobre la petición entrante.
+    Útil para depurar el reenvío de ngrok.
     """
     return jsonify({
         'your_ip': request.remote_addr,
@@ -40,15 +39,12 @@ def info():
 @app.route('/users', methods=['GET', 'POST'])
 def users_endpoint():
     """
-    Simple user management for testing team collaboration.
-
-    GET: List all users
-    POST: Create a new user
+    Gestión simple de usuarios.
     """
     if request.method == 'GET':
         return jsonify(list(users.values())), 200
 
-    # POST: Create user
+    # POST: Crear usuario
     data = request.get_json()
     if not data:
         return jsonify({'error': 'Invalid JSON'}), 400
@@ -73,50 +69,22 @@ def users_endpoint():
 
 
 # ============================================================================
-# GITHUB WEBHOOK ENDPOINT - YOUR TASK
+# ENDPOINT DEL WEBHOOK DE GITHUB - TAREA RESUELTA
 # ============================================================================
 
-@app.route('/webhooks/github', methods=['_____'])  # TODO: Which HTTP method for webhooks?
-# Hint: Webhooks use POST to send data to your server
+# 1. SOLUCIÓN: Definimos el método POST
+@app.route('/webhooks/github', methods=['POST']) 
 def github_webhook():
     """
-    Receives REAL push events from GitHub.
-
-    When you configure a webhook in GitHub repository settings, it sends POST
-    requests to this endpoint with information about repository events.
-
-    Official documentation: https://docs.github.com/en/webhooks/webhook-events-and-payloads
-
-    Real GitHub push webhook payload structure (verified 2025):
-    {
-      "ref": "refs/heads/main",                    # Branch that was pushed
-      "repository": {
-        "name": "repo-name",
-        "full_name": "user/repo-name",             # Full repository name
-        "owner": {...}
-      },
-      "pusher": {"name": "...", "email": "..."},   # Who pushed the code
-      "sender": {...},                             # GitHub user who triggered
-      "commits": [                                 # Array of commits
-        {
-          "id": "abc123...",                       # Full commit SHA
-          "message": "commit message",              # Commit message
-          "author": {"name": "...", "email": "..."}, # Commit author
-          "timestamp": "2025-01-15T10:30:00Z"
-        }
-      ],
-      "head_commit": {...}                         # Most recent commit
-    }
+    Recibe eventos REALES de push desde GitHub.
     """
-    # TODO: Get the JSON payload from the webhook
-    # Hint: Use request.get_json()
-    data = _____
+    # 2. SOLUCIÓN: Obtener el JSON del webhook
+    data = request.get_json()
 
     if not data:
         return jsonify({'error': 'Invalid payload'}), 400
 
-    # Handle GitHub "ping" event (sent when webhook is first created)
-    # This confirms your webhook endpoint is reachable
+    # Manejar evento "ping" de GitHub (lo envían al crear el webhook)
     if 'zen' in data and 'hook_id' in data:
         print(f"\n{'='*60}")
         print(f"📥 GitHub Webhook Ping Received!")
@@ -126,25 +94,21 @@ def github_webhook():
         print(f"{'='*60}\n")
         return jsonify({'status': 'pong'}), 200
 
-    # TODO: Extract repository info from real GitHub payload
-    # Hint: data.get('repository', {})
-    repository = _____
+    # 3. SOLUCIÓN: Extraer info del repositorio
+    repository = data.get('repository', {})
     repo_name = repository.get('full_name', 'unknown') if repository else 'unknown'
 
-    # TODO: Extract pusher info (who pushed the code)
-    # Hint: data.get('pusher', {})
-    pusher = _____
+    # 4. SOLUCIÓN: Extraer info de quién hizo el push
+    pusher = data.get('pusher', {})
     pusher_name = pusher.get('name', 'unknown') if pusher else 'unknown'
 
-    # TODO: Extract commits list
-    # Hint: data.get('commits', [])
-    commits = _____
+    # 5. SOLUCIÓN: Extraer lista de commits
+    commits = data.get('commits', [])
 
-    # TODO: Extract ref (which branch was pushed)
-    # Hint: data.get('ref', 'unknown')
-    ref = _____
+    # 6. SOLUCIÓN: Extraer la rama (ref)
+    ref = data.get('ref', 'unknown')
 
-    # Log the webhook with detailed output
+    # Log detallado en consola
     print(f"\n{'='*60}")
     print(f"🎉 REAL GitHub Webhook Received!")
     print(f"📦 Repository: {repo_name}")
@@ -152,16 +116,16 @@ def github_webhook():
     print(f"🌿 Branch: {ref}")
     print(f"📝 Commits: {len(commits)}")
 
-    # Show details of each commit
+    # Mostrar detalles de cada commit
     for i, commit in enumerate(commits, 1):
         commit_msg = commit.get('message', 'No message')
-        commit_id = commit.get('id', 'unknown')[:7]  # Short SHA (first 7 chars)
+        commit_id = commit.get('id', 'unknown')[:7]  # Short SHA
         author = commit.get('author', {}).get('name', 'unknown')
         print(f"   {i}. [{commit_id}] {commit_msg} (by {author})")
 
     print(f"{'='*60}\n")
 
-    # Store the event for later viewing via /webhooks/events
+    # Guardar evento en memoria para verlo en /webhooks/events
     webhook_event = {
         'type': 'github_push',
         'repository': repo_name,
@@ -172,21 +136,18 @@ def github_webhook():
     }
     webhook_events.append(webhook_event)
 
-    # TODO: Return success response
-    # Hint: GitHub expects 200 status to acknowledge receipt
-    # If you return non-2xx, GitHub will mark the webhook as failed
-    return jsonify({'status': 'received', 'commits_processed': len(commits)}), _____
+    # 7. SOLUCIÓN: Devolver 200 OK
+    return jsonify({'status': 'received', 'commits_processed': len(commits)}), 200
 
 
 # ============================================================================
-# MONITORING AND DEBUGGING
+# MONITORIZACIÓN Y DEBUG
 # ============================================================================
 
 @app.route('/webhooks/events', methods=['GET'])
 def list_webhook_events():
     """
-    Returns all received webhook events.
-    Useful for debugging and verifying webhooks were received.
+    Devuelve todos los eventos recibidos.
     """
     return jsonify({
         'total_events': len(webhook_events),
@@ -197,8 +158,7 @@ def list_webhook_events():
 @app.route('/webhooks/events/clear', methods=['POST'])
 def clear_webhook_events():
     """
-    Clears all stored webhook events.
-    Useful for testing - start fresh.
+    Limpia el historial de eventos.
     """
     global webhook_events
     count = len(webhook_events)
@@ -210,16 +170,14 @@ def clear_webhook_events():
 
 
 # ============================================================================
-# REQUEST LOGGING (for debugging)
+# LOG DE PETICIONES (DEBUG)
 # ============================================================================
 
 @app.before_request
 def log_request():
     """
-    Logs all incoming requests.
-    This helps you see traffic coming through ngrok.
+    Registra todas las peticiones entrantes para ver el tráfico de ngrok.
     """
-    # Skip logging for some paths to reduce noise
     if request.path in ['/favicon.ico']:
         return
 
@@ -230,7 +188,6 @@ def log_request():
     print(f"   From: {request.remote_addr}")
     print(f"   User-Agent: {request.headers.get('User-Agent', 'Unknown')[:50]}")
 
-    # Show request body for POST/PUT requests
     if request.method in ['POST', 'PUT', 'PATCH']:
         body = request.get_json(silent=True)
         if body:
@@ -240,7 +197,7 @@ def log_request():
 
 
 # ============================================================================
-# ERROR HANDLERS
+# MANEJO DE ERRORES
 # ============================================================================
 
 @app.errorhandler(404)
@@ -262,7 +219,6 @@ def method_not_allowed(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    app.logger.error(f'Internal server error: {str(error)}')
     return jsonify({
         'error': 'Internal Server Error',
         'message': 'Something went wrong on the server'
@@ -283,15 +239,6 @@ if __name__ == '__main__':
     print("2. Copy the https://....ngrok-free.app URL")
     print("3. Configure GitHub webhook with that URL + /webhooks/github")
     print("4. Make a commit to trigger the webhook!")
-    print("\nEndpoints available:")
-    print("  GET  /health                - Health check")
-    print("  GET  /info                  - Request debugging info")
-    print("  GET  /users                 - List users")
-    print("  POST /users                 - Create user")
-    print("  POST /webhooks/github       - GitHub push webhook (MAIN ENDPOINT)")
-    print("  GET  /webhooks/events       - List all received webhooks")
-    print("  POST /webhooks/events/clear - Clear webhook history")
-    print("\nFor detailed instructions, see readme11.md")
     print("="*70 + "\n")
 
     app.run(debug=True, port=5000)
