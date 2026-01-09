@@ -12,8 +12,8 @@ app.config['JWT_SECRET_KEY'] = 'your_jwt_secret_key'  # TODO: Change this to a s
 # Optional: Set token expiration time (default is 15 minutes)
 # app.config['JWT_ACCESS_TOKEN_EXPIRES'] = timedelta(hours=1)
 
-jwt = _____  # TODO: Initialize JWTManager with the app
-# Hint: JWTManager(app)
+jwt = JWTManager(app)
+
 
 # Simulated database to store users
 users = {
@@ -84,7 +84,7 @@ def login():
         return jsonify({'error': 'Invalid credentials'}), 401
 
     # Create JWT token with user identity
-    access_token = _____(identity=username)  # TODO: Create access token
+    access_token = create_access_token(identity=username)  # TODO: Create access token
     # Hint: Use create_access_token(identity=username)
 
     return jsonify({
@@ -99,8 +99,8 @@ def login():
 # ============================================================================
 
 @app.route('/profile', methods=['GET'])
-@_____  # TODO: Add JWT required decorator
-# Hint: @jwt_required()
+@jwt_required()
+
 def profile():
     """
     Get current user's profile - Protected endpoint
@@ -109,7 +109,7 @@ def profile():
     Authorization: Bearer <token>
     """
     # Extract the user identity from the JWT token
-    current_user = _____  # TODO: Get JWT identity
+    current_user = get_jwt_identity()
     # Hint: Use get_jwt_identity()
 
     # In a real application, you would fetch user data from a database
@@ -123,7 +123,7 @@ def profile():
 
 
 @app.route('/users', methods=['GET'])
-@_____  # TODO: Add JWT required decorator
+@jwt_required()
 # Hint: @jwt_required()
 def get_users():
     """
@@ -131,7 +131,7 @@ def get_users():
 
     Requires valid JWT token to access this resource.
     """
-    current_user = _____  # TODO: Get JWT identity
+    current_user = get_jwt_identity()
     # Hint: Use get_jwt_identity()
 
     return jsonify({
@@ -141,7 +141,7 @@ def get_users():
 
 
 @app.route('/protected', methods=['GET'])
-@_____  # TODO: Add JWT required decorator
+@jwt_required()
 # Hint: @jwt_required()
 def protected():
     """
@@ -149,7 +149,7 @@ def protected():
 
     This demonstrates that ANY endpoint can be protected with @jwt_required()
     """
-    current_user = _____  # TODO: Get JWT identity
+    current_user = get_jwt_identity()
 
     return jsonify({
         'message': f'Hello {current_user}, you have access to this protected resource!',

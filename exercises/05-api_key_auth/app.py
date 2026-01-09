@@ -1,28 +1,22 @@
 from flask import Flask, jsonify, request
 from flask_httpauth import HTTPBasicAuth
 from werkzeug.security import generate_password_hash, check_password_hash
-import _____  # TODO: Import uuid library for generating unique API keys
+import uuid  # <--- 1. Importamos librería para generar claves únicas
 from functools import wraps
 
 app = Flask(__name__)
 auth = HTTPBasicAuth()
 
-# Simulated database to store users with API keys
-users = {
-    # 'username': {
-    #     'password': 'hashed_password',
-    #     'api_key': 'unique_api_key'
-    # }
-}
-
+# Base de datos simulada
+users = {}
 
 # ============================================================================
-# BASIC AUTH VERIFICATION (for API key retrieval only)
+# VERIFICACIÓN AUTH BÁSICA (Solo para recuperar la clave perdida)
 # ============================================================================
 
 @auth.verify_password
 def verify_password(username, password):
-    """Verify username and password for Basic Auth"""
+    """Verifica usuario y contraseña para Auth Básica"""
     if username in users:
         if check_password_hash(users[username]['password'], password):
             return username
@@ -30,44 +24,42 @@ def verify_password(username, password):
 
 
 # ============================================================================
-# API KEY DECORATOR (for protecting endpoints with API keys)
+# DECORADOR API KEY (El corazón de este ejercicio)
 # ============================================================================
 
 def api_key_required(f):
     """
-    Decorator to protect routes with API key authentication.
-
-    Checks for 'x-api-key' header and validates it against stored keys.
-    This is an ALTERNATIVE to Basic Auth, not used together.
+    Decorador para proteger rutas con autenticación por API Key.
+    Busca la cabecera 'x-api-key'.
     """
     @wraps(f)
     def decorated(*args, **kwargs):
-        # TODO: Get the API key from request headers (header name: 'x-api-key')
-        api_key = _____  # Hint: Use request.headers.get('header-name')
+        # <--- 2. Obtenemos la clave de las cabeceras
+        api_key = request.headers.get('x-api-key')
 
         if not api_key:
             return jsonify({'error': 'API key missing', 'message': 'Include x-api-key header'}), 401
 
-        # TODO: Verify if the API key exists in our users database
-        # Hint: Loop through users and check if any user has this API key
+        # <--- 3. Verificamos si la clave existe en nuestra base de datos
+        # Recorremos todos los usuarios para ver si alguno tiene esta clave
         for username, user_data in users.items():
-            if user_data.get('api_key') == _____:  # Hint: Compare with api_key variable
-                # API key is valid, call the protected function
+            if user_data.get('api_key') == api_key:
+                # ¡Clave válida! Ejecutamos la función original
                 return f(*args, **kwargs)
 
-        # API key not found in database
+        # Si termina el bucle y no la encuentra:
         return jsonify({'error': 'Invalid API key', 'message': 'API key not recognized'}), 401
 
     return decorated
 
 
 # ============================================================================
-# PUBLIC ENDPOINTS (no authentication required)
+# ENDPOINTS PÚBLICOS
 # ============================================================================
 
 @app.route('/register', methods=['POST'])
 def register():
-    """Register a new user and return their API key - Public endpoint"""
+    """Registra un usuario nuevo y devuelve su API Key"""
     data = request.get_json()
 
     if not data:
@@ -82,11 +74,10 @@ def register():
     if username in users:
         return jsonify({'error': 'User already exists'}), 409
 
-    # TODO: Generate a unique API key using uuid
-    # Hint: Convert uuid.uuid4() to string
-    api_key = str(_____)  # Hint: str(uuid.uuid4())
+    # <--- 4. Generamos una API Key única (UUID v4) y la convertimos a texto
+    api_key = str(uuid.uuid4())
 
-    # Store user with hashed password and API key
+    # Guardamos el usuario
     users[username] = {
         'password': generate_password_hash(password),
         'api_key': api_key
@@ -95,24 +86,22 @@ def register():
     return jsonify({
         'message': 'User registered successfully',
         'username': username,
-        'api_key': api_key
+        'api_key': api_key  # Devolvemos la clave para que el usuario la guarde
     }), 201
 
 
 # ============================================================================
-# BASIC AUTH PROTECTED ENDPOINTS (for API key recovery)
+# ENDPOINTS PROTEGIDOS POR AUTH BÁSICA (Recuperación)
 # ============================================================================
 
-@app.route('/api-key', methods=['_____'])  # TODO: What HTTP method to GET data?
+# <--- 5. Método GET para recuperar información
+@app.route('/api-key', methods=['GET'])  
 @auth.login_required
 def get_api_key():
     """
-    Get your API key using Basic Auth - Protected by Basic Auth
-
-    This endpoint allows users to retrieve their API key if they lost it.
-    It uses Basic Auth (username:password) to authenticate.
+    Recuperar tu API Key si la has perdido.
+    Requiere Auth Básica (Usuario y Contraseña).
     """
-    # Get the authenticated username from Basic Auth
     current_user = auth.current_user()
 
     return jsonify({
@@ -122,17 +111,15 @@ def get_api_key():
 
 
 # ============================================================================
-# API KEY PROTECTED ENDPOINTS (the main pattern to learn)
+# ENDPOINTS PROTEGIDOS POR API KEY (Uso diario)
 # ============================================================================
 
 @app.route('/users', methods=['GET'])
-@_____  # TODO: Apply the API key decorator to protect this route
+@api_key_required  # <--- 6. Aplicamos nuestro decorador personalizado
 def get_users():
     """
-    Get list of all users - Protected by API key
-
-    This endpoint demonstrates API key authentication.
-    Clients must include 'x-api-key' header with valid API key.
+    Obtener lista de usuarios.
+    Requiere cabecera 'x-api-key'.
     """
     user_list = list(users.keys())
     return jsonify({
@@ -142,7 +129,7 @@ def get_users():
 
 
 # ============================================================================
-# ERROR HANDLERS
+# MANEJO DE ERRORES
 # ============================================================================
 
 @app.errorhandler(404)
@@ -155,21 +142,11 @@ def method_not_allowed(error):
 
 
 if __name__ == '__main__':
+    # Mensajes de ayuda al iniciar
     print("\n" + "="*70)
-    print("Exercise 5: API Key Authentication")
+    print("EJERCICIO 5: API KEY AUTHENTICATION - CORREGIDO")
     print("="*70)
-    print("\nPublic endpoints:")
-    print("  POST /register  - Register new user, receive API key")
-    print("\nBasic Auth protected endpoints:")
-    print("  GET  /api-key   - Retrieve your API key (requires username:password)")
-    print("\nAPI Key protected endpoints:")
-    print("  GET  /users     - List all users (requires x-api-key header)")
-    print("\nExamples:")
-    print("  curl -X POST -H 'Content-Type: application/json' \\")
-    print("       -d '{\"username\":\"alice\",\"password\":\"secret123\"}' \\")
-    print("       http://127.0.0.1:5000/register")
-    print("\n  curl -H 'x-api-key: YOUR_API_KEY' http://127.0.0.1:5000/users")
-    print("\nServer running at: http://127.0.0.1:5000")
+    print("Server running at: http://127.0.0.1:5000")
     print("="*70 + "\n")
 
     app.run(debug=True)

@@ -7,8 +7,6 @@ app = Flask(__name__)
 auth = HTTPBasicAuth()
 
 # JWT Configuration
-# WARNING: In production, use environment variables for secrets!
-# Example: app.config['JWT_SECRET_KEY'] = os.environ.get('JWT_SECRET_KEY')
 app.config['JWT_SECRET_KEY'] = 'super_secret_jwt_key'  # Only for educational purposes
 jwt = JWTManager(app)
 
@@ -44,7 +42,6 @@ def register_user():
         return jsonify({'message': 'User registered successfully.'}), 201
 
     except Exception as e:
-        # Log error internally but don't expose details to client
         app.logger.error(f'Registration error: {str(e)}')
         return jsonify({'message': 'Error processing request.'}), 400
 
@@ -84,8 +81,10 @@ def create_user_admin():
 def get_users():
     return jsonify({'users': list(users.keys())}), 200
 
-@app.route('/users/<username>', methods=['_____'])  # TODO: Set the correct HTTP method
-# Hint: Use 'PUT' for updates
+# ---------------------------------------------------------
+# CORRECCIÓN 1: ACTUALIZAR (UPDATE)
+# ---------------------------------------------------------
+@app.route('/users/<username>', methods=['PUT'])  # ### <--- AQUÍ: Usamos 'PUT'
 @jwt_required()
 def update_user(username):
     if username not in users:
@@ -100,8 +99,10 @@ def update_user(username):
     else:
         return jsonify({'message': 'No data to update.'}), 400
 
-@app.route('/users/<username>', methods=['_____'])  # TODO: Set the correct HTTP method
-# Hint: Use 'DELETE' to remove a resource
+# ---------------------------------------------------------
+# CORRECCIÓN 2: ELIMINAR (DELETE)
+# ---------------------------------------------------------
+@app.route('/users/<username>', methods=['DELETE'])  # ### <--- AQUÍ: Usamos 'DELETE'
 @jwt_required()
 def delete_user(username):
     if username not in users:
@@ -110,6 +111,7 @@ def delete_user(username):
     del users[username]
     return jsonify({'message': 'User deleted successfully.'}), 200
 
+# Error Handlers
 @app.errorhandler(404)
 def not_found(error):
     return jsonify({'error': 'Resource not found.'}), 404
@@ -120,7 +122,6 @@ def method_not_allowed(error):
 
 @app.errorhandler(500)
 def internal_error(error):
-    # Log the error but don't expose internal details to client
     app.logger.error(f'Internal server error: {str(error)}')
     return jsonify({'error': 'Internal server error.'}), 500
 
